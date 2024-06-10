@@ -63,27 +63,16 @@ let userId = "";
 
 function App() {
   const forceUpdate = useUpdate();
-  const pluginSwitchOnRef = useRef(
-    DEFAULT_CONFIGURATION.pluginSwitchOn
-  );
+  const pluginSwitchOnRef = useRef(DEFAULT_CONFIGURATION.pluginSwitchOn);
   const pluginAppsMapRef = useRef<Record<ProxySide, PluginApp[]>>({
     [ProxySide.MockResponse]: DEFAULT_CONFIGURATION.pluginMockResponseList,
   });
   const utilsRef = useRef(DEFAULT_CONFIGURATION.utils);
 
-  const collect = useCallback(() => {
-    try {
-
-    } catch (error) {
-      console.log(error);
-    }
-  }, []);
-
   const store = useCallback(() => {
     const value = {
       pluginSwitchOn: pluginSwitchOnRef.current,
-      pluginMockResponseList:
-        pluginAppsMapRef.current[ProxySide.MockResponse],
+      pluginMockResponseList: pluginAppsMapRef.current[ProxySide.MockResponse],
       utils: utilsRef.current,
     };
     if (isChromeExtensionEnv) {
@@ -96,16 +85,12 @@ function App() {
       window.localStorage.setItem(KEY, JSON.stringify(value));
       document.cookie = `${SWITCH_COOKIE_KEY}=${
         pluginSwitchOnRef.current ? "ON" : "OFF"
-      }; path=/; max-age=${
-        60 * 60 * 12
-      }; samesite=strict;`;
+      }; path=/; max-age=${60 * 60 * 12}; samesite=strict;`;
     }
-    // collect();
   }, []);
 
   const refreshPage = useCallback(() => {
-    const storedValue =
-      getConfigurationFromUrl() ?? getConfigurationFromStorage();
+    const storedValue = getConfigurationFromUrl() ?? getConfigurationFromStorage();
 
     if (storedValue) {
       pluginSwitchOnRef.current = storedValue.pluginSwitchOn ?? false;
@@ -118,11 +103,7 @@ function App() {
       utilsRef.current = DEFAULT_CONFIGURATION.utils;
       forceUpdate();
       store();
-      window.history.replaceState(
-        {},
-        "",
-        window.location.href.replace(/\?configuration=.+$/g, "")
-      );
+      window.history.replaceState({}, "", window.location.href.replace(/\?configuration=.+$/g, ""));
     }
   }, [forceUpdate, store]);
 
@@ -133,15 +114,12 @@ function App() {
 
         if (!userId) {
           userId = uuid();
-          chrome.storage.local.set({
-            [USER_ID_KEY]: userId,
-          });
+          chrome.storage.local.set({ [USER_ID_KEY]: userId });
         }
       });
       chrome.storage.local.get(KEY, (storage: Storage) => {
         if (storage[KEY]) {
-          pluginSwitchOnRef.current =
-            storage[KEY].pluginSwitchOn ?? false;
+          pluginSwitchOnRef.current = storage[KEY].pluginSwitchOn ?? false;
           pluginAppsMapRef.current = {
             [ProxySide.MockResponse]:
               storage[KEY].pluginMockResponseList ??
@@ -149,7 +127,6 @@ function App() {
           };
           utilsRef.current = DEFAULT_CONFIGURATION.utils;
           forceUpdate();
-          // collect();
         }
       });
     } else {
@@ -177,8 +154,6 @@ function App() {
     };
   }, [refreshPage]);
 
-
-  
   const Header = ({
     itemStyle,
     app,
@@ -215,7 +190,7 @@ function App() {
             color: app.disabled ? 'gray' : 'black',
           }}
         >
-          Enable this mock rule21333
+          Enable this mock rule1
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -228,22 +203,15 @@ function App() {
               forceUpdate();
               store();
             }}
-            style={{ marginLeft: '8px' }} // Optional: Add some space between the switch and the delete button
+            style={{ marginLeft: '8px' }}
           />
         )}
       </div>
     </div>
   );
-  
 
   return (
-    <div
-      className="app"
-      style={{
-        margin: 24,
-        width: "600px",
-      }}
-    >
+    <div className="app" style={{ margin: 24, width: "600px" }}>
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <Switch
@@ -267,75 +235,56 @@ function App() {
       </div>
 
       <Suspense fallback={<Spin />}>
-        {pluginAppsMapRef.current[ProxySide.MockResponse].map(
-          (app, idx) => {
-            const labelPlaceholder = "acquiring";
-            const valuePlaceholder = "acquiring";
+        {pluginAppsMapRef.current[ProxySide.MockResponse].map((app, idx) => {
+          const itemStyle: CSSProperties = {
+            width: "auto",
+            flex: 1,
+            flexShrink: 0,
+          };
 
-            const itemStyle: CSSProperties = {
-              width: "auto",
-              flex: 1,
-              flexShrink: 0,
-            };
-
-            return (
-              <div
-                key={idx}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  flexDirection: "row",
-                  marginBottom: 10,
+          return (
+            <div
+              key={idx}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "row",
+                marginBottom: 10,
+              }}
+            >
+              <ResponseEditor
+                header={
+                  <Header
+                    itemStyle={itemStyle}
+                    app={app}
+                    idx={idx}
+                    pluginSwitchOnRef={pluginSwitchOnRef}
+                    pluginAppsMapRef={pluginAppsMapRef}
+                    forceUpdate={forceUpdate}
+                    store={store}
+                    ProxySide={ProxySide}
+                  />
+                }
+                name={app.name}
+                value={app.value}
+                disabled={app.disabled || !pluginSwitchOnRef.current}
+                onNameChange={(name) => {
+                  pluginAppsMapRef.current[ProxySide.MockResponse][idx].name = name;
+                  forceUpdate();
                 }}
-              >
-                <ResponseEditor
-                  header={
-                    <Header
-                      itemStyle={itemStyle}
-                      app={app}
-                      idx={idx}
-                      pluginSwitchOnRef={pluginSwitchOnRef}
-                      pluginAppsMapRef={pluginAppsMapRef}
-                      forceUpdate={forceUpdate}
-                      store={store}
-                      ProxySide={ProxySide}
-                    />
-                  }
-                  name={app.name}
-                  value={app.value}
-                  disabled={app.disabled || !pluginSwitchOnRef.current}
-                  onNameChange={(name) => {
-                    pluginAppsMapRef.current[
-                      ProxySide.MockResponse
-                    ][idx].name = name;
-                    forceUpdate();
-                  }}
-                  onNameBlur={store}
-                  onValueChange={(value) => {
-                    pluginAppsMapRef.current[
-                      ProxySide.MockResponse
-                    ][idx].value = value;
-                    store();
-                  }}
-                  style={{
-                    ...itemStyle,
-                    flex: 4,
-                  }}
-                />
-
-                <div
-                  style={{
-                    ...itemStyle,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-start",
-                  }}
-                >
-                </div>
-              </div>
-            );
-          }
-        )}
+                onNameBlur={store}
+                onValueChange={(value) => {
+                  pluginAppsMapRef.current[ProxySide.MockResponse][idx].value = value;
+                  store();
+                }}
+                style={{
+                  ...itemStyle,
+                  flex: 4,
+                }}
+              />
+            </div>
+          );
+        })}
         <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
           <Button
             icon={<PlusOutlined />}
