@@ -2,7 +2,6 @@ import {
   KEY,
   ALERT_KEY,
   GRAPHQL_MOCK_EXTENSION_ID,
-  WEBAPP_AUTH_TOKEN_KEY,
   DEFAULT_CONFIGURATION,
   PAGE_READY_KEY,
 } from "./constant";
@@ -26,9 +25,9 @@ export const sleep = (ms: number) =>
 
 export const isValidApp = (app: App) => !app.disabled && app.name && app.value;
 
-export const preventDefault = (e: Event) => {
-  e.preventDefault();
-};
+// export const preventDefault = (e: Event) => {
+//   e.preventDefault();
+// };
 
 export const sendMessage = (value: StorageValue, pageLoad: boolean) => {
   window.postMessage(
@@ -62,16 +61,16 @@ export const setStorage = <StorageValue = any>(
   });
 
 // 页面卸载处理
-const preventPageUnload = (e: BeforeUnloadEvent) => {
-  e.preventDefault();
-  return (e.returnValue = "Are you sure you want to exit?");
-};
+// const preventPageUnload = (e: BeforeUnloadEvent) => {
+//   e.preventDefault();
+//   return (e.returnValue = "Are you sure you want to exit?");
+// };
 
-export const handlePageUnload = () => {
-  window.removeEventListener("beforeunload", preventPageUnload, {
-    capture: true,
-  });
-};
+// export const handlePageUnload = () => {
+//   window.removeEventListener("beforeunload", preventPageUnload, {
+//     capture: true,
+//   });
+// };
 
 // 插件安装检查
 const checkExtensionIsInstalled = () =>
@@ -84,8 +83,6 @@ export const overwriteGlobalVariable = function () {
   const originalXhrOpen = XMLHttpRequest.prototype.open;
   const originalSend = XMLHttpRequest.prototype.send;
   const originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
-  const originalAppendChild = Element.prototype.appendChild;
-  const originalSetItem = window.localStorage.setItem.bind(window.localStorage);
 
   const customFetch: typeof originalFetch = async function (...args) {
     const [url, options] = args[0] instanceof Request
@@ -229,43 +226,6 @@ export const overwriteGlobalVariable = function () {
     }
   };
 
-  const customAppendChild = function (node: Element) {
-    if (["SCRIPT", "IMG", "LINK"].includes(node.tagName)) {
-      const src =
-        node.getAttribute(node.tagName === "LINK" ? "href" : "src") || "";
-      const hint = rules.staticResourceRules.find((rule) => rule.filter(src));
-      if (hint) {
-        node.setAttribute(
-          node.tagName === "LINK" ? "href" : "src",
-          hint.target(src)
-        );
-      }
-    }
-
-    return originalAppendChild.call(this, node);
-  };
-
-  const customSetItem: typeof window.localStorage.setItem = function (key, value) {
-    if (key === WEBAPP_AUTH_TOKEN_KEY) {
-      window.postMessage({ key, value }, "*");
-    }
-    return originalSetItem(key, value);
-  };
-
-  if (
-    checkExtensionIsInstalled() &&
-    window.location.hostname === "staging.graphQL.com"
-  ) {
-    window.localStorage.setItem = customSetItem;
-    const params = new window.URLSearchParams(window.location.search);
-    if (
-      params.get("redirect")?.includes("ngrok") &&
-      !window.location.pathname.includes("/login")
-    ) {
-      window.location.href = params.get("redirect")!;
-    }
-  }
-
   return function updateRules(newRules: Rules) {
     rules = newRules;
     window.fetch = rules.ajaxRules.length ? customFetch : originalFetch;
@@ -278,19 +238,6 @@ export const overwriteGlobalVariable = function () {
     XMLHttpRequest.prototype.setRequestHeader = rules.ajaxRules.length
       ? customSetRequestHeader
       : originalSetRequestHeader;
-
-    const originalAppendChild = Element.prototype.appendChild;
-    // @ts-ignore
-    Element.prototype.appendChild = rules.staticResourceRules.length
-      ? customAppendChild
-      : originalAppendChild;
-
-    if (document.head) {
-      // @ts-ignore
-      document.head.appendChild = rules.staticResourceRules.length
-        ? customAppendChild
-        : originalAppendChild;
-    }
   };
 };
 
@@ -427,7 +374,7 @@ export const handleMessageEvent = async (generate: Generate) => {
 
         isFirstExecution = false;
         updateRules({ ajaxRules, staticResourceRules });
-        handlePageUnload();
+        // handlePageUnload();
       } catch (error) {
         console.log(error);
       }

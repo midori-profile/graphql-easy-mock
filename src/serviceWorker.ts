@@ -1,8 +1,6 @@
 // 导入所需的类型和常量
 import { Storage, Changes, StorageValue } from './utils/types';
-import {
-  KEY,
-} from './utils/constant';
+import { KEY } from './utils/constant';
 
 // 初始化 id
 let id = 1;
@@ -11,19 +9,6 @@ let id = 1;
 let appSetting: StorageValue = {
   pluginSwitchOn: false,
 };
-
-// 定义除 XMR 外的所有资源类型
-const ALL_RESOURCE_TYPES_EXCEPT_XMR = [
-  chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
-  chrome.declarativeNetRequest.ResourceType.SUB_FRAME,
-  chrome.declarativeNetRequest.ResourceType.STYLESHEET,
-  chrome.declarativeNetRequest.ResourceType.SCRIPT,
-  chrome.declarativeNetRequest.ResourceType.IMAGE,
-  chrome.declarativeNetRequest.ResourceType.FONT,
-  chrome.declarativeNetRequest.ResourceType.OBJECT,
-  chrome.declarativeNetRequest.ResourceType.PING,
-  chrome.declarativeNetRequest.ResourceType.MEDIA,
-];
 
 // 生成动态规则
 const generateDynamicRules = (): chrome.declarativeNetRequest.Rule[] => {
@@ -63,8 +48,8 @@ const updateRules = async () => {
 // 初始化
 const initialize = () => {
   console.log('service initialize')
+  
   // 读取存储
-  // 这个函数从 Chrome 的本地存储中读取数据。这些数据包括拦截器的开关状态、客户端应用列表和一些工具设置。
   const readStorage = () => {
     chrome.storage.local.get(KEY, async (storage: Storage) => {
       if (storage[KEY]?.pluginSwitchOn) {
@@ -84,7 +69,6 @@ const initialize = () => {
   console.log('service readStorage')
 
   // 监听存储变化
-  // 这个监听器会在本地存储的数据发生变化时触发。如果变化的数据是我们关心的数据（由 KEY 指定），那么就会更新 appSetting，并调用 updateRules() 更新规则
   chrome.storage.onChanged.addListener(async (changes: Changes, areaName) => {
     if (areaName === 'local' && changes[KEY]) {
       appSetting = {
