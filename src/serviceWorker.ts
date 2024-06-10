@@ -9,7 +9,7 @@ let id = 1;
 
 // 初始化应用设置
 let appSetting: StorageValue = {
-  interceptorSwitchOn: false,
+  pluginSwitchOn: false,
 };
 
 // 定义除 XMR 外的所有资源类型
@@ -30,7 +30,7 @@ const generateDynamicRules = (): chrome.declarativeNetRequest.Rule[] => {
   const rules: chrome.declarativeNetRequest.Rule[] = [];
 
   // 如果拦截器开关关闭，则返回空规则
-  if (!appSetting.interceptorSwitchOn) {
+  if (!appSetting.pluginSwitchOn) {
     return rules;
   }
   return rules;
@@ -40,7 +40,7 @@ const generateDynamicRules = (): chrome.declarativeNetRequest.Rule[] => {
 const updateRules = async () => {
   // 根据拦截器开关设置图标
   chrome.action.setIcon({
-    path: appSetting.interceptorSwitchOn
+    path: appSetting.pluginSwitchOn
       ? '/images/graphql.png'
       : '/images/graphql-disable.png',
   });
@@ -67,10 +67,10 @@ const initialize = () => {
   // 这个函数从 Chrome 的本地存储中读取数据。这些数据包括拦截器的开关状态、客户端应用列表和一些工具设置。
   const readStorage = () => {
     chrome.storage.local.get(KEY, async (storage: Storage) => {
-      if (storage[KEY]?.interceptorSwitchOn) {
+      if (storage[KEY]?.pluginSwitchOn) {
         chrome.action.setIcon({ path: '/images/graphql.png' });
         appSetting = {
-          interceptorSwitchOn: storage[KEY].interceptorSwitchOn || false,
+          pluginSwitchOn: storage[KEY].pluginSwitchOn || false,
         };
         updateRules();
       } else {
@@ -88,7 +88,7 @@ const initialize = () => {
   chrome.storage.onChanged.addListener(async (changes: Changes, areaName) => {
     if (areaName === 'local' && changes[KEY]) {
       appSetting = {
-        interceptorSwitchOn: changes[KEY].newValue.interceptorSwitchOn || false,
+        pluginSwitchOn: changes[KEY].newValue.pluginSwitchOn || false,
       };
       updateRules();
     }

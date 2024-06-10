@@ -44,10 +44,10 @@ const main = async function () {
 
     // 如果拦截器开关打开，并且最后有效时间戳不是有效的，那么关闭拦截器开关，禁用生产环境，并将新的值存储到 KEY 中
     if (
-      value.interceptorSwitchOn &&
+      value.pluginSwitchOn &&
       !isEffectivePluginSwitch(value.lastEffectiveTimestamp ?? Date.now())
     ) {
-      value.interceptorSwitchOn = false;
+      value.pluginSwitchOn = false;
       chrome.storage.local.set({ [KEY]: value });
     }
 

@@ -23,7 +23,7 @@ import {
 } from "../../utils/types";
 const ResponseEditor = lazy(() => import("./components/mockForm"));
 
-type InterceptorApp = {
+type PluginApp = {
   name: string;
   value: string;
   disabled: boolean;
@@ -63,11 +63,11 @@ let userId = "";
 
 function App() {
   const forceUpdate = useUpdate();
-  const interceptorSwitchOnRef = useRef(
-    DEFAULT_CONFIGURATION.interceptorSwitchOn
+  const pluginSwitchOnRef = useRef(
+    DEFAULT_CONFIGURATION.pluginSwitchOn
   );
-  const interceptorAppsMapRef = useRef<Record<ProxySide, InterceptorApp[]>>({
-    [ProxySide.MockResponse]: DEFAULT_CONFIGURATION.interceptorMockResponseList,
+  const pluginAppsMapRef = useRef<Record<ProxySide, PluginApp[]>>({
+    [ProxySide.MockResponse]: DEFAULT_CONFIGURATION.pluginMockResponseList,
   });
   const utilsRef = useRef(DEFAULT_CONFIGURATION.utils);
 
@@ -81,21 +81,21 @@ function App() {
 
   const store = useCallback(() => {
     const value = {
-      interceptorSwitchOn: interceptorSwitchOnRef.current,
-      interceptorMockResponseList:
-        interceptorAppsMapRef.current[ProxySide.MockResponse],
+      pluginSwitchOn: pluginSwitchOnRef.current,
+      pluginMockResponseList:
+        pluginAppsMapRef.current[ProxySide.MockResponse],
       utils: utilsRef.current,
     };
     if (isChromeExtensionEnv) {
       chrome.storage.local.set({
-        [KEY]: value.interceptorSwitchOn
+        [KEY]: value.pluginSwitchOn
           ? { ...value, lastEffectiveTimestamp: Date.now() }
           : value,
       });
     } else {
       window.localStorage.setItem(KEY, JSON.stringify(value));
       document.cookie = `${SWITCH_COOKIE_KEY}=${
-        interceptorSwitchOnRef.current ? "ON" : "OFF"
+        pluginSwitchOnRef.current ? "ON" : "OFF"
       }; path=/; max-age=${
         60 * 60 * 12
       }; samesite=strict;`;
@@ -108,12 +108,12 @@ function App() {
       getConfigurationFromUrl() ?? getConfigurationFromStorage();
 
     if (storedValue) {
-      interceptorSwitchOnRef.current = storedValue.interceptorSwitchOn ?? false;
-      interceptorAppsMapRef.current = {
+      pluginSwitchOnRef.current = storedValue.pluginSwitchOn ?? false;
+      pluginAppsMapRef.current = {
         [ProxySide.MockResponse]:
-          (storedValue.interceptorMockResponseList || []).length > 0
-            ? (storedValue.interceptorMockResponseList as InterceptorApp[])
-            : DEFAULT_CONFIGURATION.interceptorMockResponseList,
+          (storedValue.pluginMockResponseList || []).length > 0
+            ? (storedValue.pluginMockResponseList as PluginApp[])
+            : DEFAULT_CONFIGURATION.pluginMockResponseList,
       };
       utilsRef.current = DEFAULT_CONFIGURATION.utils;
       forceUpdate();
@@ -140,12 +140,12 @@ function App() {
       });
       chrome.storage.local.get(KEY, (storage: Storage) => {
         if (storage[KEY]) {
-          interceptorSwitchOnRef.current =
-            storage[KEY].interceptorSwitchOn ?? false;
-          interceptorAppsMapRef.current = {
+          pluginSwitchOnRef.current =
+            storage[KEY].pluginSwitchOn ?? false;
+          pluginAppsMapRef.current = {
             [ProxySide.MockResponse]:
-              storage[KEY].interceptorMockResponseList ??
-              DEFAULT_CONFIGURATION.interceptorMockResponseList,
+              storage[KEY].pluginMockResponseList ??
+              DEFAULT_CONFIGURATION.pluginMockResponseList,
           };
           utilsRef.current = DEFAULT_CONFIGURATION.utils;
           forceUpdate();
@@ -183,8 +183,8 @@ function App() {
     itemStyle,
     app,
     idx,
-    interceptorSwitchOnRef,
-    interceptorAppsMapRef,
+    pluginSwitchOnRef,
+    pluginAppsMapRef,
     forceUpdate,
     store,
     ProxySide,
@@ -201,9 +201,9 @@ function App() {
       <div>
         <Switch
           checked={!app.disabled}
-          disabled={!interceptorSwitchOnRef.current}
+          disabled={!pluginSwitchOnRef.current}
           onChange={(checked) => {
-            interceptorAppsMapRef.current[ProxySide.MockResponse][idx].disabled = !checked;
+            pluginAppsMapRef.current[ProxySide.MockResponse][idx].disabled = !checked;
             forceUpdate();
             store();
           }}
@@ -219,12 +219,12 @@ function App() {
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        {(idx > 0 || interceptorAppsMapRef.current[ProxySide.MockResponse].length > 1) && (
+        {(idx > 0 || pluginAppsMapRef.current[ProxySide.MockResponse].length > 1) && (
           <Button
             icon={<DeleteOutlined />}
-            disabled={!interceptorSwitchOnRef.current}
+            disabled={!pluginSwitchOnRef.current}
             onClick={() => {
-              interceptorAppsMapRef.current[ProxySide.MockResponse].splice(idx, 1);
+              pluginAppsMapRef.current[ProxySide.MockResponse].splice(idx, 1);
               forceUpdate();
               store();
             }}
@@ -247,9 +247,9 @@ function App() {
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <Switch
-            checked={interceptorSwitchOnRef.current}
+            checked={pluginSwitchOnRef.current}
             onChange={(checked) => {
-              interceptorSwitchOnRef.current = checked;
+              pluginSwitchOnRef.current = checked;
               forceUpdate();
               store();
             }}
@@ -259,7 +259,7 @@ function App() {
               fontSize: '16px',
               marginLeft: '8px',
               fontWeight: 'normal',
-              color:  interceptorSwitchOnRef.current ? 'black' : 'gray',
+              color:  pluginSwitchOnRef.current ? 'black' : 'gray',
             }}>
             Enable GraphQL Mock Extension
           </span>
@@ -267,7 +267,7 @@ function App() {
       </div>
 
       <Suspense fallback={<Spin />}>
-        {interceptorAppsMapRef.current[ProxySide.MockResponse].map(
+        {pluginAppsMapRef.current[ProxySide.MockResponse].map(
           (app, idx) => {
             const labelPlaceholder = "acquiring";
             const valuePlaceholder = "acquiring";
@@ -294,8 +294,8 @@ function App() {
                       itemStyle={itemStyle}
                       app={app}
                       idx={idx}
-                      interceptorSwitchOnRef={interceptorSwitchOnRef}
-                      interceptorAppsMapRef={interceptorAppsMapRef}
+                      pluginSwitchOnRef={pluginSwitchOnRef}
+                      pluginAppsMapRef={pluginAppsMapRef}
                       forceUpdate={forceUpdate}
                       store={store}
                       ProxySide={ProxySide}
@@ -303,16 +303,16 @@ function App() {
                   }
                   name={app.name}
                   value={app.value}
-                  disabled={app.disabled || !interceptorSwitchOnRef.current}
+                  disabled={app.disabled || !pluginSwitchOnRef.current}
                   onNameChange={(name) => {
-                    interceptorAppsMapRef.current[
+                    pluginAppsMapRef.current[
                       ProxySide.MockResponse
                     ][idx].name = name;
                     forceUpdate();
                   }}
                   onNameBlur={store}
                   onValueChange={(value) => {
-                    interceptorAppsMapRef.current[
+                    pluginAppsMapRef.current[
                       ProxySide.MockResponse
                     ][idx].value = value;
                     store();
@@ -339,9 +339,9 @@ function App() {
         <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
           <Button
             icon={<PlusOutlined />}
-            disabled={!interceptorSwitchOnRef.current}
+            disabled={!pluginSwitchOnRef.current}
             onClick={() => {
-              interceptorAppsMapRef.current[ProxySide.MockResponse].push({
+              pluginAppsMapRef.current[ProxySide.MockResponse].push({
                 name: "",
                 value: "",
                 disabled: false,

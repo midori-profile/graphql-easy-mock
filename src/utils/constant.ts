@@ -20,8 +20,8 @@ export const DEFAULT_UTILS = {
 };
 
 export const DEFAULT_CONFIGURATION = {
-  interceptorSwitchOn: false,
-  interceptorMockResponseList: DEFAULT_MOCK_RESPONSE_LIST,
+  pluginSwitchOn: false,
+  pluginMockResponseList: DEFAULT_MOCK_RESPONSE_LIST,
   utils: DEFAULT_UTILS,
 };
 

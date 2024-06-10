@@ -4,8 +4,8 @@ import { KEY } from './constant';
 export type StorageKey = typeof KEY;
 
 export type StorageValue = {
-  interceptorSwitchOn?: boolean;
-  interceptorMockResponseList?: App[];
+  pluginSwitchOn?: boolean;
+  pluginMockResponseList?: App[];
   lastEffectiveTimestamp?: number;
 };
 
@@ -35,7 +35,7 @@ export type ApplicationRule = {
 };
 
 export type Generate = (
-  graphQLInterceptor: StorageValue,
+  graphQLPlugin: StorageValue,
   isFirstExecution: boolean
 ) => Promise<ApplicationRule>;
 
@@ -101,7 +101,7 @@ export enum METHOD {
 
 declare global {
   interface Window {
-    graphQLInterceptor?: {
+    graphQLPlugin?: {
       blockObserver?: MutationObserver;
     };
     ignoreClassName: boolean;
