@@ -21,7 +21,9 @@ import {
   StorageValue,
   App as Application,
 } from "../../utils/types";
-const ResponseEditor = lazy(() => import("./components/mockForm"));
+const MockForm = lazy(() => import("./components/mockForm"));
+import Header from "./components/header";
+import { getConfigurationFromStorage, getConfigurationFromUrl } from "./hooks/useConfiguration";
 
 type PluginApp = {
   name: string;
@@ -33,31 +35,8 @@ enum ProxySide {
   MockResponse = "MockResponse",
 }
 
-const isValidApp = (app: Application) => !app.disabled && app.name && app.value;
-
 const isChromeExtensionEnv =
   typeof window.chrome?.storage?.local?.set === "function";
-
-const getConfigurationFromStorage = () => {
-  const storedValueStr = window.localStorage.getItem(KEY) ?? "";
-  try {
-    return JSON.parse(storedValueStr) as StorageValue;
-  } catch (error) {
-    return null;
-  }
-};
-
-const getConfigurationFromUrl = () => {
-  try {
-    return JSON.parse(
-      decodeURIComponent(
-        new URLSearchParams(window.location.search).get("configuration") ?? ""
-      )
-    ) as StorageValue;
-  } catch (error) {
-    return null;
-  }
-};
 
 let userId = "";
 
@@ -154,62 +133,6 @@ function App() {
     };
   }, [refreshPage]);
 
-  const Header = ({
-    itemStyle,
-    app,
-    idx,
-    pluginSwitchOnRef,
-    pluginAppsMapRef,
-    forceUpdate,
-    store,
-    ProxySide,
-  }) => (
-    <div
-      style={{
-        ...itemStyle,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-      }}
-    >
-      <div>
-        <Switch
-          checked={!app.disabled}
-          disabled={!pluginSwitchOnRef.current}
-          onChange={(checked) => {
-            pluginAppsMapRef.current[ProxySide.MockResponse][idx].disabled = !checked;
-            forceUpdate();
-            store();
-          }}
-        />
-        <span
-          style={{
-            marginLeft: '8px',
-            fontWeight: 'normal',
-            color: app.disabled ? 'gray' : 'black',
-          }}
-        >
-          Enable this mock rule1
-        </span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        {(idx > 0 || pluginAppsMapRef.current[ProxySide.MockResponse].length > 1) && (
-          <Button
-            icon={<DeleteOutlined />}
-            disabled={!pluginSwitchOnRef.current}
-            onClick={() => {
-              pluginAppsMapRef.current[ProxySide.MockResponse].splice(idx, 1);
-              forceUpdate();
-              store();
-            }}
-            style={{ marginLeft: '8px' }}
-          />
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <div className="app" style={{ margin: 24, width: "600px" }}>
       <div style={{ marginBottom: 12 }}>
@@ -252,7 +175,7 @@ function App() {
                 marginBottom: 10,
               }}
             >
-              <ResponseEditor
+              <MockForm
                 header={
                   <Header
                     itemStyle={itemStyle}

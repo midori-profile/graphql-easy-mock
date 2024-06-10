@@ -5,7 +5,7 @@ import {
 } from "./utils/constant";
 import {
   isEffectivePluginSwitch,
-  sendMessage,
+  postMessage,
   getStorage,
 } from "./utils/utils";
 import { Changes, StorageValue } from "./utils/types";
@@ -40,14 +40,14 @@ const handleMessageEvent = (value: StorageValue, observer: MutationObserver) => 
   event: MessageEvent<{ key: string; value: string }>
 ): void => {
   if (event.data.key === PAGE_READY_KEY && event.data.value) {
-    sendMessage(value, true);
+    postMessage(value, true);
     observer.disconnect();
   }
 };
 
 const handleStorageChange = (changes: Changes, areaName: string): void => {
   if (areaName === "local" && changes[KEY]) {
-    sendMessage(changes[KEY].newValue, false);
+    postMessage(changes[KEY].newValue, false);
   }
 };
 

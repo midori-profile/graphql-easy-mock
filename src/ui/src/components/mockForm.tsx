@@ -35,7 +35,7 @@ type MockResponseValue = {
   responseText?: string;
 };
 
-const ResponseEditor = ({
+const MockForm = ({
   name,
   value,
   disabled,
@@ -175,4 +175,4 @@ const ResponseEditor = ({
   );
 };
 
-export default ResponseEditor;
+export default MockForm;

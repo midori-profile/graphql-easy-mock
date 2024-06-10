@@ -17,19 +17,15 @@ import {
   METHOD,
 } from "./types";
 
-// 工具函数
-export const sleep = (ms: number) =>
+// tools
+export const delayByMilliseconds = (ms: number) =>
   new Promise((resolve) => {
     window.setTimeout(resolve, ms);
   });
 
-export const isValidApp = (app: App) => !app.disabled && app.name && app.value;
+export const isAppValid = (app: App) => !app.disabled && app.name && app.value;
 
-// export const preventDefault = (e: Event) => {
-//   e.preventDefault();
-// };
-
-export const sendMessage = (value: StorageValue, pageLoad: boolean) => {
+export const postMessage = (value: StorageValue, pageLoad: boolean) => {
   window.postMessage(
     {
       key: KEY,
@@ -60,23 +56,10 @@ export const setStorage = <StorageValue = any>(
     );
   });
 
-// 页面卸载处理
-// const preventPageUnload = (e: BeforeUnloadEvent) => {
-//   e.preventDefault();
-//   return (e.returnValue = "Are you sure you want to exit?");
-// };
-
-// export const handlePageUnload = () => {
-//   window.removeEventListener("beforeunload", preventPageUnload, {
-//     capture: true,
-//   });
-// };
-
-// 插件安装检查
 const checkExtensionIsInstalled = () =>
   !!document.getElementById(GRAPHQL_MOCK_EXTENSION_ID);
 
-// 全局变量覆盖
+// global rewrite
 export const overwriteGlobalVariable = function () {
   let rules: Rules = { ajaxRules: [], staticResourceRules: [] };
   const originalFetch = window.fetch;
@@ -123,7 +106,7 @@ export const overwriteGlobalVariable = function () {
           };
         }
         if (request.delay) {
-          await sleep(request.delay);
+          await delayByMilliseconds(request.delay);
         }
       }
       const response = await originalFetch(nextUrl, nextOptions);
@@ -217,13 +200,7 @@ export const overwriteGlobalVariable = function () {
       }
     }
 
-    if (this.delay > 0) {
-      window.setTimeout(() => {
-        originalSend.call(this, data);
-      }, this.delay);
-    } else {
-      originalSend.call(this, data);
-    }
+    originalSend.call(this, data);
   };
 
   return function updateRules(newRules: Rules) {
@@ -241,7 +218,6 @@ export const overwriteGlobalVariable = function () {
   };
 };
 
-// 插件设置构建
 export const isEffectivePluginSwitch = (lastEffectiveTimestamp: number) =>
   (Date.now() - lastEffectiveTimestamp) / (60 * 60 * 1000) < 12;
 
@@ -255,6 +231,67 @@ export const buildGraphqlPluginSetting = (
     isEffectivePluginSwitch(storage.lastEffectiveTimestamp ?? Date.now()),
 });
 
+const parseResponseSetting = (value: string): ResponseSetting | null => {
+  try {
+    return JSON.parse(value) as ResponseSetting;
+  } catch {
+    return null;
+  }
+};
+
+const buildFilter = (name: string, responseSetting: ResponseSetting) => ({
+  method,
+  url,
+  body,
+}: {
+  method: string;
+  url: string;
+  body?: BodyInit;
+}) => {
+  const pathname = (url || "").split("?")[0];
+  let parsedBody: { operationName?: string } = {};
+  if (typeof body === "string") {
+    try {
+      parsedBody = JSON.parse(body);
+    } catch {
+      parsedBody = {};
+    }
+  }
+  if (responseSetting.type === TYPE.GraphQL) {
+    // GraphQL Mock
+    return (
+      pathname.endsWith(name) &&
+      parsedBody.operationName === responseSetting.operationName
+    );
+  } else {
+    // RESTful Mock
+    return (
+      pathname.endsWith(name) &&
+      method === (responseSetting.method || METHOD.GET)
+    );
+  }
+};
+
+const buildModifyResponse = (responseSetting: ResponseSetting) => () => {
+  try {
+    return responseSetting.responseText;
+  } catch {
+    return "";
+  }
+};
+
+const buildAjaxRule = (app: App): AjaxRule | null => {
+  const { name, value } = app;
+  const responseSetting = parseResponseSetting(value);
+  if (!responseSetting) return null;
+  return {
+    filter: buildFilter(name, responseSetting),
+    modifyResponse: buildModifyResponse(responseSetting),
+    type: responseSetting.type,
+    statusCode: Number(responseSetting.statusCode || "200"),
+  };
+};
+
 const buildMockResponseRules = (
   graphQLPluginSetting: StorageValue
 ): AjaxRule[] => {
@@ -262,56 +299,14 @@ const buildMockResponseRules = (
     return [];
   }
 
-  const mockResponseApps = graphQLPluginSetting.pluginSwitchOn
-    ? (graphQLPluginSetting.pluginMockResponseList || []).filter(isValidApp)
-    : [];
-  return mockResponseApps
-    .filter(isValidApp)
-    .map((app) => {
-      const { name, value } = app;
-      try {
-        const responseSetting = JSON.parse(value) as ResponseSetting;
-        return {
-          filter: ({ method, url, body }) => {
-            let pathname = (url || "").split("?")[0];
-            let parsedBody = body || {};
-            try {
-              if (typeof body === "string") {
-                parsedBody = JSON.parse(body);
-              }
-            } catch (e) {
-              parsedBody = {};
-            }
-            if (responseSetting.type === TYPE.GraphQL) { // GraphQL Mock
-              return (
-                pathname.endsWith(name) &&
-                parsedBody.operationName === responseSetting.operationName
-              );
-            } else { // RESTful Mock
-              return (
-                pathname.endsWith(name) &&
-                method === (responseSetting.method || METHOD.GET)
-              );
-            }
-          },
-          modifyResponse: () => {
-            try {
-              return responseSetting.responseText;
-            } catch (e) {
-              return "";
-            }
-          },
-          type: responseSetting.type,
-          statusCode: Number(responseSetting.statusCode || "200"),
-        };
-      } catch (e) {
-        return false;
-      }
-    })
-    .filter(Boolean) as unknown as AjaxRule[];
-};
+  const mockResponseApps = (graphQLPluginSetting.pluginMockResponseList || []).filter(
+    isAppValid
+  );
 
-// 消息处理
+  return mockResponseApps
+    .map(buildAjaxRule)
+    .filter(Boolean) as AjaxRule[];
+}
 export const handleMessageEvent = async (generate: Generate) => {
   let isFirstExecution = true;
   const updateRules = overwriteGlobalVariable();
@@ -328,53 +323,78 @@ export const handleMessageEvent = async (generate: Generate) => {
     );
   }
 
+  const handlePluginSetting = async (data: any) => {
+    const graphQLPluginSetting = buildGraphqlPluginSetting(data.value ?? {});
+  
+    const {
+      entrypoints = [],
+      blockResourceRules = [],
+      ajaxRules = [],
+      staticResourceRules = [],
+      mainFrameText,
+    } = await generate(graphQLPluginSetting, isFirstExecution);
+  
+    ajaxRules.unshift(...buildMockResponseRules(graphQLPluginSetting));
+  
+    return {
+      entrypoints,
+      blockResourceRules,
+      ajaxRules,
+      staticResourceRules,
+      mainFrameText,
+    };
+  };
+  
+  const handlePluginEnabled = (isPluginEnabled: boolean) => {
+    if (isPluginEnabled && !window.sessionStorage.getItem(ALERT_KEY)) {
+      window.sessionStorage.setItem(ALERT_KEY, "true");
+      if (isFirstExecution) {
+        console.log(
+          "🚀 Graphql Easy Mock is running in your website for the first time!"
+        );
+      }
+    }
+  };
+  
+  const handleFirstExecution = (isPluginEnabled: boolean, mainFrameText: string) => {
+    if (isFirstExecution) {
+      !isExtensionInstalled && window.graphQLPlugin?.blockObserver?.disconnect();
+  
+      if (mainFrameText) {
+        document.write(mainFrameText);
+      }
+  
+      if (isPluginEnabled) {
+        document.title = `${document.title} (GraphQL Easy Mock)`;
+      }
+  
+      isFirstExecution = false;
+    }
+  };
+  
   window.addEventListener("message", async (e: MessageEvent<Message>) => {
     const { data } = e;
-
+  
     if (data?.key === KEY) {
       try {
-        const graphQLPluginSetting = buildGraphqlPluginSetting(data.value ?? {});
-
         const {
-          entrypoints = [],
-          blockResourceRules = [],
-          ajaxRules = [],
-          staticResourceRules = [],
+          entrypoints,
+          blockResourceRules,
+          ajaxRules,
+          staticResourceRules,
           mainFrameText,
-        } = await generate(graphQLPluginSetting, isFirstExecution);
-
-        ajaxRules.unshift(...buildMockResponseRules(graphQLPluginSetting));
-
+        } = await handlePluginSetting(data);
+  
         const isPluginEnabled =
           entrypoints.length > 0 ||
           blockResourceRules.length > 0 ||
           ajaxRules.length > 0 ||
           staticResourceRules.length > 0;
-
-        if (isPluginEnabled && !window.sessionStorage.getItem(ALERT_KEY)) {
-          window.sessionStorage.setItem(ALERT_KEY, "true");
-          if (isFirstExecution) {
-            console.log(
-              "🚀 Graphql Easy Mock is running in your website for the first time!"
-            );
-          }
-        }
-
-        if (isFirstExecution) {
-          !isExtensionInstalled && window.graphQLPlugin?.blockObserver?.disconnect();
-
-          if (mainFrameText) {
-            document.write(mainFrameText);
-          }
-
-          if (isPluginEnabled) {
-            document.title = `${document.title} (GraphQL Easy Mock)`;
-          }
-        }
-
-        isFirstExecution = false;
+  
+        handlePluginEnabled(isPluginEnabled);
+        handleFirstExecution(isPluginEnabled, mainFrameText);
+  
         updateRules({ ajaxRules, staticResourceRules });
-        // handlePageUnload();
       } catch (error) {
         console.log(error);
       }
