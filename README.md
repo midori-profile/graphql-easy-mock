@@ -1,4 +1,2 @@
-# graphql-easy-mock
+# checkoutui-dashboard
 
-## start example
-server node server.js

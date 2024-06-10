@@ -7,13 +7,32 @@ const GET_ITEMS = gql`
   }
 `;
 
+const GET_TYPES = gql`
+  query GetTypes {
+    getTypes
+  }
+`;
+
 const Home = () => {
-  const { loading, error, data } = useQuery(GET_ITEMS);
+  console.log("sending request-----------");
+  const { loading: loadingItems, error: errorItems, data: dataItems } = useQuery(GET_ITEMS, {
+    fetchPolicy: "network-only",
+  });
+  const { loading: loadingTypes, error: errorTypes, data: dataTypes } = useQuery(GET_TYPES, {
+    fetchPolicy: "network-only",
+  });
+  console.log("sending request end-------------");
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error :(</p>;
+  if (loadingItems || loadingTypes) return <p>Loading...</p>;
+  if (errorItems || errorTypes) return <p>Error :(</p>;
 
-  return data.items.map((item: string) => <div key={item}>{item}</div>);
+  return (
+    <>
+      {dataItems && dataItems.items.map((item: string) => <div key={item}>{item}</div>)}
+      <div>------------</div>
+      {dataTypes && dataTypes.getTypes.map((type: string) => <div key={type}>{type}</div>)}
+    </>
+  );
 };
 
 export default Home;
