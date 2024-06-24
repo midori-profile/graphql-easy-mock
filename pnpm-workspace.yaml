@@ -1,2 +1,4 @@
 packages:
   - 'src/ui'
+  - 'example/client'
+  - 'example/server'
