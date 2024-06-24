@@ -1,5 +1,3 @@
-# GraphQL Easy Mock
-
 <img src="./readme/graph-ql.svg" width="300" alt="GraphQL Easy Mock">
 
 **GraphQL Easy Mock** is an API mock development tool that supports both GraphQL and traditional RESTful APIs.
