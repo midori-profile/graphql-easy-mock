@@ -1,43 +1,62 @@
 # GraphQL Easy Mock
 
-<img src="./readme/graph-ql.svg" width="200" alt="GraphQL Easy Mock">
+<img src="./readme/graph-ql.svg" width="300" alt="GraphQL Easy Mock">
 
 **GraphQL Easy Mock** is an API mock development tool that supports both GraphQL and traditional RESTful APIs.
 
 ## Installation
 
-The plugin has not been published to the application market yet. You can import the `dist` package from the root directory of this repository into your Chrome extension. Follow these steps:
+The plugin has not been published to the application market yet. You can import the `dist` package from the root directory of this repository into your Chrome extension. 
+
+Follow these steps:
 
 1. Click on the Chrome plugin button and then click on "Manage extensions".
-   <img src="./readme/readme-1.jpg" width="200" alt="Manage Extensions">
+
+<img src="./readme/readme-1.jpg" width="400" alt="Manage Extensions">
+
 2. Click "Enable developer mode" in the top right corner.
-   <img src="./readme/readme-2.jpg" width="200" alt="Enable Developer Mode">
+
+<img src="./readme/readme-2.jpg" width="200" alt="Enable Developer Mode">
+
 3. Click "Load unpacked".
-   <img src="./readme/readme-3.jpg" width="200" alt="Load Unpacked">
+
+<img src="./readme/readme-3.jpg" width="200" alt="Load Unpacked">
+
 4. Import the `dist` package from the root directory of this repository.
-   <img src="./readme/readme-4.jpg" width="200" alt="Import Dist Package">
+
+<img src="./readme/readme-4.jpg" width="400" alt="Import Dist Package">
+
 5. The plugin has been successfully installed in your Chrome browser.
-   <img src="./readme/readme-5.jpg" width="200" alt="Plugin Installed">
+
+<img src="./readme/readme-5.jpg" width="400" alt="Plugin Installed">
 
 ## Usage
 
 Using GraphQL Easy Mock is very simple:
 1. Select your mock type, GraphQL or RESTful. Here, we use GraphQL as an example.
+
 2. Enter the path, operation name, and HTTP status code (default is 200).
-   <img src="./readme/readme-6.jpg" width="200" alt="Enter Mock Details">
+
+<img src="./readme/readme-6.jpg" width="400" alt="Enter Mock Details">
+
 3. Use any GraphQL dev tool to view the response of the request you want to mock, and copy it.
-   <img src="./readme/readme-7.jpg" width="200" alt="Copy Response">
+
+<img src="./readme/readme-7.jpg" width="600" alt="Copy Response">
+
 4. Paste it into the response JSON field of the plugin and adjust the mock content as needed.
-   <img src="./readme/readme-8.jpg" width="200" alt="Adjust Mock Content">
+
+<img src="./readme/readme-8.jpg" width="400" alt="Adjust Mock Content">
+
 5. You can see the mock has been successfully applied.
-   <img src="./readme/readme-9.jpg" width="200" alt="Mock Applied">
-   <img src="./readme/readme-10.jpg" width="200" alt="Mock Applied">
+
+<img src="./readme/readme-9.jpg" width="400" alt="Mock Applied">
+<img src="./readme/readme-10.jpg" width="400" alt="Mock Applied">
 
 ## Exploring More Features
 
 I have written an example for you, which includes a Node server and a React page. You can also experience RESTful mock, HTTP codes, and simultaneously generate multiple mock rules.
 
-<img src="./readme/readme-11.jpg" width="200" alt="Example Usage">
+<img src="./readme/readme-11.jpg" width="400" alt="Example Usage">
 
 ### How to Use the Example:
 1. Navigate to the server directory:
