@@ -38,7 +38,7 @@ const Header = ({
             color: app.disabled ? 'gray' : 'black',
           }}
         >
-          Enable this mock rule1
+          Enable this mock rule
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
